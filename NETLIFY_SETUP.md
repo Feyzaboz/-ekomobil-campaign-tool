@@ -1,61 +1,80 @@
-# Netlify Deploy Kurulumu
+# Netlify Deployment Setup
 
-## Netlify CLI ile Deploy
+## Sorun: "Event kaydedilemedi" Hatası
 
-### 1. Netlify CLI Login
+Bu hata, frontend'in production backend'e bağlanamamasından kaynaklanıyor.
 
-Terminal'de şu komutu çalıştırın:
-```bash
-cd /Users/feyzaboz/Documents/Cursor/ekomobil-campaign-tool
-npx netlify-cli login
+## Çözüm Adımları
+
+### 1. Backend'i Railway'da Deploy Et
+
+Backend henüz Railway'da deploy edilmemişse:
+
+1. Railway Dashboard'a git: https://railway.app/dashboard
+2. "New Project" → "Deploy from GitHub repo"
+3. Repository'yi seç: `ekomobil-campaign-tool`
+4. Root directory: `backend`
+5. Build command: `npm install && npm run build`
+6. Start command: `npm start`
+7. Environment variables ekle:
+   - `NODE_ENV=production`
+   - `PORT=3001` (Railway otomatik atar, ama ekleyebilirsin)
+
+Backend URL'i şu formatta olacak: `https://ekomobil-campaign-tool-backend.up.railway.app`
+
+### 2. Netlify'da Environment Variable Ekle
+
+1. Netlify Dashboard → Site Settings → Environment Variables
+2. Yeni variable ekle:
+   - **Key**: `VITE_API_URL`
+   - **Value**: `https://ekomobil-campaign-tool-backend.up.railway.app/api`
+   - **Scopes**: Production, Preview, Deploy Previews (hepsini seç)
+
+### 3. Frontend'i Yeniden Deploy Et
+
+1. Netlify Dashboard → Deploys
+2. "Trigger deploy" → "Clear cache and deploy site"
+
+### 4. CORS Ayarları (Backend'de)
+
+Backend'de CORS'un Netlify domain'ini kabul ettiğinden emin ol:
+
+```typescript
+// backend/src/index.ts
+app.use(cors({
+  origin: [
+    'https://ekomobil-campaign-tool.netlify.app',
+    'http://localhost:5176'
+  ]
+}));
 ```
 
-Bu komut tarayıcınızı açacak ve Netlify hesabınızla login olmanızı isteyecek.
+### 5. Test Et
 
-### 2. Site Oluştur ve Deploy Et
+1. https://ekomobil-campaign-tool.netlify.app adresine git
+2. F12 → Console'u aç
+3. Event eklemeyi dene
+4. Hata varsa console'da görünecek
 
-Login olduktan sonra:
-```bash
-# Site oluştur
-npx netlify-cli sites:create --name ekomobil-campaign-tool
+## Alternatif: Netlify Redirects Kullan
 
-# Deploy et
-cd frontend
-npm run build
-cd ..
-npx netlify-cli deploy --dir=frontend/dist --prod
+Eğer Railway backend URL'i değişirse, `netlify.toml` dosyasındaki redirect'i güncelle:
+
+```toml
+[[redirects]]
+  from = "/api/*"
+  to = "YOUR_RAILWAY_BACKEND_URL/api/:splat"
+  status = 200
+  force = true
 ```
 
-### 3. GitHub'a Bağla (Otomatik Deploy)
+## Sorun Giderme
 
-Netlify dashboard'da:
-1. https://app.netlify.com → "Add new site" → "Import an existing project"
-2. GitHub'ı seçin
-3. `Feyzaboz/-ekomobil-campaign-tool` repository'sini seçin
-4. Build settings:
-   - Base directory: `frontend`
-   - Build command: `npm ci && npm run build`
-   - Publish directory: `frontend/dist`
-5. Environment variables:
-   - `VITE_API_URL` = Backend URL + `/api`
+- **"Event kaydedilemedi" hatası**: Backend'e bağlanamıyor
+  - Backend URL'ini kontrol et
+  - Network tab'ında API isteklerini kontrol et
+  - CORS hatası varsa backend'de CORS ayarlarını kontrol et
 
-## Netlify API Token ile (Alternatif)
+- **CORS hatası**: Backend'de Netlify domain'i allow list'e ekle
 
-Eğer CLI kullanmak istemiyorsanız, Netlify API token ile de deploy edebilirsiniz:
-
-1. https://app.netlify.com/user/applications → "New access token"
-2. Token'ı kopyalayın
-3. Şu komutu çalıştırın:
-```bash
-export NETLIFY_AUTH_TOKEN=your_token_here
-npx netlify-cli deploy --dir=frontend/dist --prod
-```
-
-## Manuel Deploy (Hızlı Test)
-
-```bash
-cd /Users/feyzaboz/Documents/Cursor/ekomobil-campaign-tool/frontend
-npm run build
-npx netlify-cli deploy --dir=dist --prod
-```
-
+- **404 hatası**: Backend route'ları kontrol et (`/api/events` endpoint'i var mı?)

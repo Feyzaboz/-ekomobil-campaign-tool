@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://ekomobil-campaign-tool-backend.up.railway.app/api/:splat"
+  status = 200
+  force = true
+

@@ -1,7 +1,19 @@
 import axios from 'axios';
 
+// Production backend URL - Railway deployment
+// For local development, use '/api' which proxies to localhost:3001
+const getBaseURL = () => {
+  // Check if we're in production (Netlify)
+  if (import.meta.env.PROD) {
+    // Use Railway backend URL if available, otherwise try Netlify redirect
+    return import.meta.env.VITE_API_URL || 'https://ekomobil-campaign-tool-backend.up.railway.app/api';
+  }
+  // Development: use proxy
+  return '/api';
+};
+
 const api = axios.create({
-  baseURL: (import.meta.env.VITE_API_URL as string) || '/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
