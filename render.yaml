@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ekomobil-campaign-tool-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_PATH
+        value: /opt/render/project/src/backend/data/db.json
+
