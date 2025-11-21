@@ -8,6 +8,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_PATH
-        value: /opt/render/project/src/backend/data/db.json
+      - key: PORT
+        value: 10000
 
