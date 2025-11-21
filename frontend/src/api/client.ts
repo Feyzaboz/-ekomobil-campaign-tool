@@ -6,7 +6,7 @@ const getBaseURL = () => {
   // Check if we're in production (Netlify)
   if (import.meta.env.PROD) {
     // Use Render.com backend URL if available, otherwise try Netlify redirect
-    return import.meta.env.VITE_API_URL || 'https://ekomobil-campaign-tool-backend.onrender.com/api';
+    return import.meta.env.VITE_API_URL || 'https://ekomobil-campaign-tool.onrender.com/api';
   }
   // Development: use proxy
   return '/api';
