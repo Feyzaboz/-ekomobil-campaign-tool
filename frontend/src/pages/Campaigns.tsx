@@ -563,7 +563,7 @@ export default function Campaigns() {
                     <td className="px-6 py-4 whitespace-nowrap font-medium">{campaign.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{campaign.event_name}</td>
                     <td className="px-6 py-4 text-sm">{getBenefitLabel(campaign.benefit_type)}</td>
-                    <td className="px-6 py-4 text-sm">{campaign.platforms.join(', ')}</td>
+                    <td className="px-6 py-4 text-sm">{Array.isArray(campaign.platforms) ? campaign.platforms.join(', ') : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 text-xs rounded ${
@@ -609,7 +609,13 @@ export default function Campaigns() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                      Henüz kampanya eklenmemiş
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
