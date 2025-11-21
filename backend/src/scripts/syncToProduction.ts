@@ -1,4 +1,4 @@
-import { getDb } from '../db/connection';
+import { db } from '../db/connection';
 import axios from 'axios';
 
 // Production backend URL - buraya deploy edilen backend URL'ini yazın
@@ -6,7 +6,7 @@ const PRODUCTION_API_URL = process.env.PRODUCTION_API_URL || 'https://your-backe
 
 async function syncToProduction() {
   console.log('Syncing data to production backend...');
-  const db = getDb();
+  // Use db directly from connection
 
   try {
     // Sync Categories
@@ -51,7 +51,7 @@ async function syncToProduction() {
         console.log(`✓ Synced brand: ${brand.name} (ID: ${brandId})`);
 
         // Sync brand offers
-        const brandOffers = db.brand_offers.filter(bo => bo.brand_id === brand.id);
+        const brandOffers = db.brand_offers.filter((bo: any) => bo.brand_id === brand.id);
         for (const offer of brandOffers) {
           try {
             await axios.post(`${PRODUCTION_API_URL}/brands/${brandId}/offers`, {
