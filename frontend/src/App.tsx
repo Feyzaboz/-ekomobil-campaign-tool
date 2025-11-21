@@ -2,8 +2,7 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import BrandCashback from './pages/BrandCashback';
 import CategoryCashback from './pages/CategoryCashback';
 import Campaigns from './pages/Campaigns';
-import Announcements from './pages/Announcements';
-import { ShoppingBag, FolderTree, Megaphone, Bell } from 'lucide-react';
+import { ShoppingBag, FolderTree, Megaphone } from 'lucide-react';
 
 function App() {
   return (
@@ -16,7 +15,6 @@ function App() {
             <Route path="/brands" element={<BrandCashback />} />
             <Route path="/categories" element={<CategoryCashback />} />
             <Route path="/campaigns" element={<Campaigns />} />
-            <Route path="/announcements" element={<Announcements />} />
           </Routes>
         </main>
       </div>
@@ -31,7 +29,6 @@ function NavBar() {
     { path: '/brands', label: 'Harca Kazan Markalar', icon: ShoppingBag },
     { path: '/categories', label: 'Harca Kazan Kategoriler', icon: FolderTree },
     { path: '/campaigns', label: 'Kampanya Oluşturma', icon: Megaphone },
-    { path: '/announcements', label: 'Duyurular', icon: Bell },
   ];
 
   return (
