@@ -416,7 +416,7 @@ export default function Campaigns() {
                       required
                     >
                       <option value="">Seçin...</option>
-                      {events.map((event) => (
+                      {Array.isArray(events) && events.map((event) => (
                         <option key={event.id} value={event.id}>
                           {event.name}
                         </option>
