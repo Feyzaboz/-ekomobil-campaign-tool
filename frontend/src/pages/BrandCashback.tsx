@@ -95,15 +95,15 @@ export default function BrandCashback() {
       if (filters.isActive) params.status = filters.isActive;
       if (filters.name) params.search = filters.name;
       const response = await api.get('/brands', { params });
-      let filtered = response.data || [];
+      let filtered = Array.isArray(response.data) ? response.data : [];
       
-      if (filters.category) {
+      if (filters.category && Array.isArray(filtered)) {
         filtered = filtered.filter((b: Brand) => 
           b.category_name?.toLowerCase() === filters.category.toLowerCase()
         );
       }
       
-      setBrands(filtered);
+      setBrands(Array.isArray(filtered) ? filtered : []);
     } catch (error: any) {
       console.error('Failed to load brands', error);
       setError('Markalar yüklenemedi. API bağlantısını kontrol edin.');
@@ -116,7 +116,7 @@ export default function BrandCashback() {
   const loadCategories = async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data || []);
+      setCategories(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to load categories', error);
       setCategories([]);
@@ -126,7 +126,8 @@ export default function BrandCashback() {
   const loadIntegrators = async () => {
     try {
       const response = await api.get('/integrators');
-      setIntegrators((response.data || []).filter((i: Integrator) => i.is_active));
+      const data = Array.isArray(response.data) ? response.data : [];
+      setIntegrators(data.filter((i: Integrator) => i.is_active));
     } catch (error) {
       console.error('Failed to load integrators', error);
       setIntegrators([]);
@@ -138,10 +139,14 @@ export default function BrandCashback() {
       const response = await api.get(`/brands/${brandId}/offers`);
       setBrandOffers(prev => ({
         ...prev,
-        [brandId]: response.data
+        [brandId]: Array.isArray(response.data) ? response.data : []
       }));
     } catch (error) {
       console.error('Failed to load offers', error);
+      setBrandOffers(prev => ({
+        ...prev,
+        [brandId]: []
+      }));
     }
   };
 
@@ -330,13 +335,13 @@ export default function BrandCashback() {
     setEditingCashbackValue(0);
   };
 
-  const filteredBrands = brands.filter((brand) => {
+  const filteredBrands = Array.isArray(brands) ? brands.filter((brand) => {
     const primaryOffer = getPrimaryOffer(brand.id);
     const ekomobilRate = primaryOffer ? primaryOffer.ekomobil_rate * 100 : 0;
     const userRate = primaryOffer ? primaryOffer.user_rate * 100 : 0;
     
     return (
-      (filters.name === '' || brand.name.toLowerCase().includes(filters.name.toLowerCase())) &&
+      (filters.name === '' || brand.name?.toLowerCase().includes(filters.name.toLowerCase())) &&
       (filters.category === '' || brand.category_name?.toLowerCase() === filters.category.toLowerCase()) &&
       (filters.partnerCompany === '' || 
         (primaryOffer && primaryOffer.integrator_code?.toLowerCase() === filters.partnerCompany.toLowerCase())) &&
@@ -346,7 +351,7 @@ export default function BrandCashback() {
         (filters.isActive === 'ACTIVE' && brand.status === 'ACTIVE') || 
         (filters.isActive === 'INACTIVE' && brand.status === 'INACTIVE'))
     );
-  });
+  }) : [];
 
   if (loading) {
     return (
