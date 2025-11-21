@@ -330,7 +330,7 @@ export default function Campaigns() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {Array.isArray(events) && events.length > 0 ? events.map((event) => (
+                {Array.isArray(events) && events.map((event) => (
                   <tr key={event.id}>
                     <td className="px-6 py-4 whitespace-nowrap font-medium">{event.name}</td>
                     <td className="px-6 py-4 text-gray-600">{event.description}</td>
@@ -358,13 +358,7 @@ export default function Campaigns() {
                       </button>
                     </td>
                   </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                      Henüz event tanımı eklenmemiş
-                    </td>
-                  </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>
@@ -422,7 +416,7 @@ export default function Campaigns() {
                       required
                     >
                       <option value="">Seçin...</option>
-                      {Array.isArray(events) && events.map((event) => (
+                      {events.map((event) => (
                         <option key={event.id} value={event.id}>
                           {event.name}
                         </option>
@@ -564,12 +558,12 @@ export default function Campaigns() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {Array.isArray(campaigns) && campaigns.length > 0 ? campaigns.map((campaign) => (
+                {Array.isArray(campaigns) && campaigns.map((campaign) => (
                   <tr key={campaign.id}>
                     <td className="px-6 py-4 whitespace-nowrap font-medium">{campaign.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{campaign.event_name}</td>
                     <td className="px-6 py-4 text-sm">{getBenefitLabel(campaign.benefit_type)}</td>
-                    <td className="px-6 py-4 text-sm">{Array.isArray(campaign.platforms) ? campaign.platforms.join(', ') : '-'}</td>
+                    <td className="px-6 py-4 text-sm">{campaign.platforms.join(', ')}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 text-xs rounded ${
@@ -615,13 +609,7 @@ export default function Campaigns() {
                       </button>
                     </td>
                   </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                      Henüz kampanya eklenmemiş
-                    </td>
-                  </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>
