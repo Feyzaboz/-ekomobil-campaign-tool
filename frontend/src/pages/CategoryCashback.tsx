@@ -50,10 +50,14 @@ export default function CategoryCashback() {
   }, []);
 
   useEffect(() => {
-    categories.forEach(category => {
-      loadOffers(category.id);
-    });
-  }, [categories]);
+    if (Array.isArray(categories) && categories.length > 0) {
+      categories.forEach(category => {
+        if (category && category.id) {
+          loadOffers(category.id);
+        }
+      });
+    }
+  }, [categories.length]);
 
   useEffect(() => {
     loadCategories();
@@ -62,30 +66,33 @@ export default function CategoryCashback() {
   const loadCategories = async () => {
     try {
       const response = await api.get('/categories');
-      let filtered = response.data;
+      let filtered = Array.isArray(response.data) ? response.data : [];
       
-      if (filters.name) {
+      if (filters.name && Array.isArray(filtered)) {
         filtered = filtered.filter((c: Category) => 
-          c.name.toLowerCase().includes(filters.name.toLowerCase())
+          c.name?.toLowerCase().includes(filters.name.toLowerCase())
         );
       }
       
-      if (filters.status) {
+      if (filters.status && Array.isArray(filtered)) {
         filtered = filtered.filter((c: Category) => c.status === filters.status);
       }
       
-      setCategories(filtered);
+      setCategories(Array.isArray(filtered) ? filtered : []);
     } catch (error) {
       console.error('Failed to load categories', error);
+      setCategories([]);
     }
   };
 
   const loadIntegrators = async () => {
     try {
       const response = await api.get('/integrators');
-      setIntegrators(response.data.filter((i: Integrator) => i.is_active));
+      const data = Array.isArray(response.data) ? response.data : [];
+      setIntegrators(data.filter((i: Integrator) => i.is_active));
     } catch (error) {
       console.error('Failed to load integrators', error);
+      setIntegrators([]);
     }
   };
 
@@ -94,10 +101,14 @@ export default function CategoryCashback() {
       const response = await api.get(`/categories/${categoryId}/offers`);
       setCategoryOffers(prev => ({
         ...prev,
-        [categoryId]: response.data
+        [categoryId]: Array.isArray(response.data) ? response.data : []
       }));
     } catch (error) {
       console.error('Failed to load offers', error);
+      setCategoryOffers(prev => ({
+        ...prev,
+        [categoryId]: []
+      }));
     }
   };
 
@@ -296,7 +307,7 @@ export default function CategoryCashback() {
                   </div>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b">Kod</th>
-                {integrators.map((integrator) => (
+                {Array.isArray(integrators) && integrators.map((integrator) => (
                   <th key={integrator.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b">
                     <div className="flex flex-col">
                       <span className="mb-1">{integrator.name}</span>

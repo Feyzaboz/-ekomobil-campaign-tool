@@ -65,18 +65,20 @@ export default function Campaigns() {
   const loadEvents = async () => {
     try {
       const response = await api.get('/events');
-      setEvents(response.data);
+      setEvents(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to load events', error);
+      setEvents([]);
     }
   };
 
   const loadCampaigns = async () => {
     try {
       const response = await api.get('/campaigns');
-      setCampaigns(response.data);
+      setCampaigns(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to load campaigns', error);
+      setCampaigns([]);
     }
   };
 
@@ -414,7 +416,7 @@ export default function Campaigns() {
                       required
                     >
                       <option value="">Seçin...</option>
-                      {events.map((event) => (
+                      {Array.isArray(events) && events.map((event) => (
                         <option key={event.id} value={event.id}>
                           {event.name}
                         </option>
@@ -556,7 +558,7 @@ export default function Campaigns() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {campaigns.map((campaign) => (
+                {Array.isArray(campaigns) && campaigns.length > 0 ? campaigns.map((campaign) => (
                   <tr key={campaign.id}>
                     <td className="px-6 py-4 whitespace-nowrap font-medium">{campaign.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{campaign.event_name}</td>
