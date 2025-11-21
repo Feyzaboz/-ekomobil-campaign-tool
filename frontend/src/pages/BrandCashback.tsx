@@ -47,6 +47,8 @@ export default function BrandCashback() {
   const [editingCashbackId, setEditingCashbackId] = useState<number | null>(null);
   const [editingCashbackValue, setEditingCashbackValue] = useState<number>(0);
   const [editingIntegratorId, setEditingIntegratorId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState({
     name: '',
@@ -88,11 +90,12 @@ export default function BrandCashback() {
 
   const loadBrands = async () => {
     try {
+      setError(null);
       const params: any = {};
       if (filters.isActive) params.status = filters.isActive;
       if (filters.name) params.search = filters.name;
       const response = await api.get('/brands', { params });
-      let filtered = response.data;
+      let filtered = response.data || [];
       
       if (filters.category) {
         filtered = filtered.filter((b: Brand) => 
@@ -101,26 +104,32 @@ export default function BrandCashback() {
       }
       
       setBrands(filtered);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load brands', error);
+      setError('Markalar yüklenemedi. API bağlantısını kontrol edin.');
+      setBrands([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadCategories = async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data);
+      setCategories(response.data || []);
     } catch (error) {
       console.error('Failed to load categories', error);
+      setCategories([]);
     }
   };
 
   const loadIntegrators = async () => {
     try {
       const response = await api.get('/integrators');
-      setIntegrators(response.data.filter((i: Integrator) => i.is_active));
+      setIntegrators((response.data || []).filter((i: Integrator) => i.is_active));
     } catch (error) {
       console.error('Failed to load integrators', error);
+      setIntegrators([]);
     }
   };
 
@@ -338,6 +347,34 @@ export default function BrandCashback() {
         (filters.isActive === 'INACTIVE' && brand.status === 'INACTIVE'))
     );
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Uyarı</h3>
+          <p className="text-yellow-700">{error}</p>
+          <p className="text-sm text-yellow-600 mt-2">
+            Backend API çalışmıyor olabilir. Lütfen backend'in çalıştığından emin olun.
+          </p>
+        </div>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Harca Kazan Markalar</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
