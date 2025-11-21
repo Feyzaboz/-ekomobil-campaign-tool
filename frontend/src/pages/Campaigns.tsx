@@ -330,7 +330,7 @@ export default function Campaigns() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {events.map((event) => (
+                {Array.isArray(events) && events.length > 0 ? events.map((event) => (
                   <tr key={event.id}>
                     <td className="px-6 py-4 whitespace-nowrap font-medium">{event.name}</td>
                     <td className="px-6 py-4 text-gray-600">{event.description}</td>
@@ -358,7 +358,13 @@ export default function Campaigns() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                      Henüz event tanımı eklenmemiş
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
