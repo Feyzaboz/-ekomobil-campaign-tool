@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../api/client';
 import { Plus, Edit, X } from 'lucide-react';
 
@@ -69,28 +69,44 @@ export default function BrandCashback() {
     isActive: true,
   });
 
-  useEffect(() => {
-    loadBrands();
-    loadCategories();
-    loadIntegrators();
+  const loadOffers = useCallback(async (brandId: number) => {
+    try {
+      const response = await api.get(`/brands/${brandId}/offers`);
+      setBrandOffers(prev => ({
+        ...prev,
+        [brandId]: Array.isArray(response.data) ? response.data : []
+      }));
+    } catch (error) {
+      console.error('Failed to load offers', error);
+      setBrandOffers(prev => ({
+        ...prev,
+        [brandId]: []
+      }));
+    }
   }, []);
 
-  useEffect(() => {
-    // Load offers for all brands
-    if (Array.isArray(brands) && brands.length > 0) {
-      brands.forEach(brand => {
-        if (brand && brand.id) {
-          loadOffers(brand.id);
-        }
-      });
+  const loadCategories = useCallback(async () => {
+    try {
+      const response = await api.get('/categories');
+      setCategories(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Failed to load categories', error);
+      setCategories([]);
     }
-  }, [brands.length]);
+  }, []);
 
-  useEffect(() => {
-    loadBrands();
-  }, [filters.name, filters.category, filters.partnerCompany, filters.isActive]);
+  const loadIntegrators = useCallback(async () => {
+    try {
+      const response = await api.get('/integrators');
+      const data = Array.isArray(response.data) ? response.data : [];
+      setIntegrators(data.filter((i: Integrator) => i.is_active));
+    } catch (error) {
+      console.error('Failed to load integrators', error);
+      setIntegrators([]);
+    }
+  }, []);
 
-  const loadBrands = async () => {
+  const loadBrands = useCallback(async () => {
     try {
       setError(null);
       const params: any = {};
@@ -113,44 +129,28 @@ export default function BrandCashback() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.isActive, filters.name, filters.category]);
 
-  const loadCategories = async () => {
-    try {
-      const response = await api.get('/categories');
-      setCategories(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      console.error('Failed to load categories', error);
-      setCategories([]);
-    }
-  };
+  useEffect(() => {
+    loadBrands();
+    loadCategories();
+    loadIntegrators();
+  }, [loadBrands, loadCategories, loadIntegrators]);
 
-  const loadIntegrators = async () => {
-    try {
-      const response = await api.get('/integrators');
-      const data = Array.isArray(response.data) ? response.data : [];
-      setIntegrators(data.filter((i: Integrator) => i.is_active));
-    } catch (error) {
-      console.error('Failed to load integrators', error);
-      setIntegrators([]);
+  useEffect(() => {
+    // Load offers for all brands
+    if (Array.isArray(brands) && brands.length > 0) {
+      brands.forEach(brand => {
+        if (brand && brand.id) {
+          loadOffers(brand.id);
+        }
+      });
     }
-  };
+  }, [brands.length, loadOffers]);
 
-  const loadOffers = async (brandId: number) => {
-    try {
-      const response = await api.get(`/brands/${brandId}/offers`);
-      setBrandOffers(prev => ({
-        ...prev,
-        [brandId]: Array.isArray(response.data) ? response.data : []
-      }));
-    } catch (error) {
-      console.error('Failed to load offers', error);
-      setBrandOffers(prev => ({
-        ...prev,
-        [brandId]: []
-      }));
-    }
-  };
+  useEffect(() => {
+    loadBrands();
+  }, [loadBrands]);
 
   const getBrandOffer = (brandId: number, integratorId: number): BrandOffer | null => {
     const offers = brandOffers[brandId] || [];
