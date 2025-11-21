@@ -350,7 +350,7 @@ export default function CategoryCashback() {
                     >
                       <td className="px-6 py-4 whitespace-nowrap font-medium">{category.name}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-500">{category.code}</td>
-                      {integrators.map((integrator) => {
+                      {Array.isArray(integrators) && integrators.map((integrator) => {
                         const offer = getCategoryOffer(category.id, integrator.id);
                         const userRate = offer ? offer.user_rate * 100 : 0;
                         const isEditingThis = isEditing && editingIntegratorId === integrator.id;
