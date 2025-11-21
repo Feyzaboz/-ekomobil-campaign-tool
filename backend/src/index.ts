@@ -32,7 +32,7 @@ app.use('/api/campaigns', campaignsRouter);
 app.use('/api/announcements', announcementsRouter);
 app.use('/api/events', eventsRouter);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
 
