@@ -77,9 +77,11 @@ export default function BrandCashback() {
 
   useEffect(() => {
     // Load offers for all brands
-    if (brands.length > 0) {
+    if (Array.isArray(brands) && brands.length > 0) {
       brands.forEach(brand => {
-        loadOffers(brand.id);
+        if (brand && brand.id) {
+          loadOffers(brand.id);
+        }
       });
     }
   }, [brands.length]);
