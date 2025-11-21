@@ -11,6 +11,7 @@
     "import": "tsx src/scripts/importFromOld.ts",
     "update-integrators": "tsx src/scripts/updateBrandIntegrators.ts",
     "sync-production": "tsx src/scripts/syncToProduction.ts",
+    "sync-from-local": "tsx src/scripts/syncFromLocal.ts",
     "postinstall": "npm run build"
   },
   "dependencies": {
