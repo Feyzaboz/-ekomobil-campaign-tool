@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { query } from './db/connection';
+import { runMigrations } from './db/migrate';
 
 // Routes
 import integratorsRouter from './routes/integrators';
@@ -12,6 +13,12 @@ import announcementsRouter from './routes/announcements';
 import eventsRouter from './routes/events';
 
 dotenv.config();
+
+// Run migrations on startup
+runMigrations().catch((error) => {
+  console.error('Migration error:', error);
+  // Don't exit, continue with server startup
+});
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
