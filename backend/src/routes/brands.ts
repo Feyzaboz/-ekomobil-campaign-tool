@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { query } from '../db/connection';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { status, search } = req.query;
     let sql = `
@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const result = await query(
       'SELECT b.*, c.name as category_name FROM brands b LEFT JOIN categories c ON b.category_id = c.id WHERE b.id = $1',
@@ -50,7 +50,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, status, categoryId } = req.body;
     const result = await query(
@@ -63,7 +63,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { name, status, categoryId } = req.body;
     const result = await query(
@@ -79,7 +79,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const result = await query('DELETE FROM brands WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) {
@@ -92,7 +92,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Brand Offers
-router.get('/:id/offers', async (req, res) => {
+router.get('/:id/offers', async (req: Request, res: Response) => {
   try {
     const result = await query(
       `SELECT bo.*, i.name as integrator_name, i.code as integrator_code
@@ -108,7 +108,7 @@ router.get('/:id/offers', async (req, res) => {
   }
 });
 
-router.post('/:id/offers', async (req, res) => {
+router.post('/:id/offers', async (req: Request, res: Response) => {
   try {
     const { integratorId, ekomobilRate, userRate, isActive, isBestOffer, validFrom, validTo } = req.body;
     
@@ -131,7 +131,7 @@ router.post('/:id/offers', async (req, res) => {
   }
 });
 
-router.put('/:id/offers/:offerId', async (req, res) => {
+router.put('/:id/offers/:offerId', async (req: Request, res: Response) => {
   try {
     const { integratorId, ekomobilRate, userRate, isActive, isBestOffer, validFrom, validTo } = req.body;
     
@@ -160,7 +160,7 @@ router.put('/:id/offers/:offerId', async (req, res) => {
   }
 });
 
-router.delete('/:id/offers/:offerId', async (req, res) => {
+router.delete('/:id/offers/:offerId', async (req: Request, res: Response) => {
   try {
     const result = await query(
       'DELETE FROM brand_offers WHERE id = $1 AND brand_id = $2 RETURNING *',

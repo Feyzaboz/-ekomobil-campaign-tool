@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { query } from '../db/connection';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await query('SELECT * FROM integrators ORDER BY name');
     res.json(result.rows);
@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const result = await query('SELECT * FROM integrators WHERE id = $1', [req.params.id]);
     if (result.rows.length === 0) {
@@ -24,7 +24,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, code, isActive } = req.body;
     const result = await query(
@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { name, code, isActive } = req.body;
     const result = await query(
@@ -59,7 +59,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const result = await query('DELETE FROM integrators WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) {

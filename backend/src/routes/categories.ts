@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { query } from '../db/connection';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await query('SELECT * FROM categories ORDER BY name');
     res.json(result.rows);
@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const result = await query('SELECT * FROM categories WHERE id = $1', [req.params.id]);
     if (result.rows.length === 0) {
@@ -24,7 +24,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, code, status } = req.body;
     const result = await query(
@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { name, code, status } = req.body;
     const result = await query(
@@ -59,7 +59,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const result = await query('DELETE FROM categories WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) {
@@ -72,7 +72,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Category Offers
-router.get('/:id/offers', async (req, res) => {
+router.get('/:id/offers', async (req: Request, res: Response) => {
   try {
     const result = await query(
       `SELECT co.*, i.name as integrator_name, i.code as integrator_code
@@ -88,7 +88,7 @@ router.get('/:id/offers', async (req, res) => {
   }
 });
 
-router.post('/:id/offers', async (req, res) => {
+router.post('/:id/offers', async (req: Request, res: Response) => {
   try {
     const { integratorId, ekomobilRate, userRate, isActive } = req.body;
     const result = await query(
@@ -102,7 +102,7 @@ router.post('/:id/offers', async (req, res) => {
   }
 });
 
-router.put('/:id/offers/:offerId', async (req, res) => {
+router.put('/:id/offers/:offerId', async (req: Request, res: Response) => {
   try {
     const { integratorId, ekomobilRate, userRate, isActive } = req.body;
     const result = await query(
@@ -121,7 +121,7 @@ router.put('/:id/offers/:offerId', async (req, res) => {
   }
 });
 
-router.delete('/:id/offers/:offerId', async (req, res) => {
+router.delete('/:id/offers/:offerId', async (req: Request, res: Response) => {
   try {
     const result = await query(
       'DELETE FROM category_offers WHERE id = $1 AND category_id = $2 RETURNING *',

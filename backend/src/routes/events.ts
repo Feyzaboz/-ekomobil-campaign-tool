@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { query } from '../db/connection';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await query('SELECT * FROM event_definitions ORDER BY created_at DESC');
     res.json(result.rows);
@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const result = await query('SELECT * FROM event_definitions WHERE id = $1', [req.params.id]);
     if (result.rows.length === 0) {
@@ -24,7 +24,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, description, minAppOpenCount, appOpenWindowDays, minRefundCount, refundWindowDays, extraFilters } = req.body;
     const result = await query(
@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { name, description, minAppOpenCount, appOpenWindowDays, minRefundCount, refundWindowDays, extraFilters } = req.body;
     const result = await query(
@@ -57,7 +57,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     // Check if event is used in campaigns
     const campaignCheck = await query('SELECT COUNT(*) FROM campaigns WHERE event_id = $1', [req.params.id]);

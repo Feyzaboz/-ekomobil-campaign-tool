@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { query } from '../db/connection';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await query(
       `SELECT c.*, e.name as event_name, e.description as event_description
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const result = await query(
       `SELECT c.*, e.name as event_name, e.description as event_description
@@ -35,7 +35,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, description, eventId, benefitType, benefitValue, platforms, startDate, endDate, status } = req.body;
     
@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { name, description, eventId, benefitType, benefitValue, platforms, startDate, endDate, status } = req.body;
     
@@ -81,7 +81,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.post('/:id/duplicate', async (req, res) => {
+router.post('/:id/duplicate', async (req: Request, res: Response) => {
   try {
     const original = await query('SELECT * FROM campaigns WHERE id = $1', [req.params.id]);
     if (original.rows.length === 0) {
@@ -110,7 +110,7 @@ router.post('/:id/duplicate', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const result = await query('DELETE FROM campaigns WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) {
