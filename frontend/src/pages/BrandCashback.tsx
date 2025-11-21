@@ -195,32 +195,36 @@ export default function BrandCashback() {
         brandId = brandResponse.data.id;
       }
 
-      // Update or create brand offer
+      // Update or create brand offer - ONLY for this specific brand
       const ekomobilRate = parseFloat(brandForm.ekomobilRate) || 0;
       const userRate = parseFloat(brandForm.userRate) || 0;
+      const integratorId = parseInt(brandForm.integratorId);
       
       // Ensure offers are loaded before checking
       await loadOffers(brandId);
       // Wait a bit for state to update
       await new Promise(resolve => setTimeout(resolve, 200));
-      const primaryOffer = getPrimaryOffer(brandId);
+      
+      // Find the offer for this specific brand and integrator
+      const offers = brandOffers[brandId] || [];
+      const existingOffer = offers.find((o: BrandOffer) => o.integrator_id === integratorId);
       
       try {
-        if (primaryOffer && primaryOffer.id) {
-          // Update existing offer
-          await api.put(`/brands/${brandId}/offers/${primaryOffer.id}`, {
-            integratorId: parseInt(brandForm.integratorId),
+        if (existingOffer && existingOffer.id) {
+          // Update existing offer - ONLY this specific offer
+          await api.put(`/brands/${brandId}/offers/${existingOffer.id}`, {
+            integratorId: integratorId,
             ekomobilRate: ekomobilRate / 100,
             userRate: userRate / 100,
             isActive: brandForm.isActive,
-            isBestOffer: primaryOffer.is_best_offer || true,
-            validFrom: primaryOffer.valid_from || null,
-            validTo: primaryOffer.valid_to || null,
+            isBestOffer: existingOffer.is_best_offer || true,
+            validFrom: existingOffer.valid_from || null,
+            validTo: existingOffer.valid_to || null,
           });
         } else {
-          // Create new offer
+          // Create new offer - ONLY for this brand
           await api.post(`/brands/${brandId}/offers`, {
-            integratorId: parseInt(brandForm.integratorId),
+            integratorId: integratorId,
             ekomobilRate: ekomobilRate / 100,
             userRate: userRate / 100,
             isActive: brandForm.isActive,
@@ -231,7 +235,7 @@ export default function BrandCashback() {
         // If update fails, try to create new offer
         if (offerError.response?.status === 404 || offerError.response?.data?.error?.includes('not found')) {
           await api.post(`/brands/${brandId}/offers`, {
-            integratorId: parseInt(brandForm.integratorId),
+            integratorId: integratorId,
             ekomobilRate: ekomobilRate / 100,
             userRate: userRate / 100,
             isActive: brandForm.isActive,
