@@ -5,8 +5,10 @@ import axios from 'axios';
 const getBaseURL = () => {
   // Check if we're in production (Netlify)
   if (import.meta.env.PROD) {
-    // Use Render.com backend URL if available, otherwise try Netlify redirect
-    return import.meta.env.VITE_API_URL || 'https://ekomobil-campaign-tool.onrender.com/api';
+    // Use Render.com backend URL - always use the direct URL in production
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://ekomobil-campaign-tool.onrender.com/api';
+    console.log('API Base URL:', apiUrl);
+    return apiUrl;
   }
   // Development: use proxy
   return '/api';
@@ -25,6 +27,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      status: error.response?.status,
+      baseURL: error.config?.baseURL,
+      url: error.config?.url,
+    });
     // Don't throw error, return a rejected promise with error info
     return Promise.reject(error);
   }

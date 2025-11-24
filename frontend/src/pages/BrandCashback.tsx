@@ -124,7 +124,13 @@ export default function BrandCashback() {
       setBrands(Array.isArray(filtered) ? filtered : []);
     } catch (error: any) {
       console.error('Failed to load brands', error);
-      setError('Markalar yüklenemedi. API bağlantısını kontrol edin.');
+      const errorMessage = error.response?.data?.error || error.message || 'Bilinmeyen hata';
+      const errorDetails = error.code === 'ECONNABORTED' 
+        ? 'Backend yanıt vermiyor (timeout). Lütfen daha sonra tekrar deneyin.'
+        : error.code === 'ERR_NETWORK'
+        ? 'Backend API\'ye bağlanılamıyor. Backend çalışıyor mu kontrol edin.'
+        : `API Hatası: ${errorMessage}`;
+      setError(`Markalar yüklenemedi. ${errorDetails}`);
       setBrands([]);
     } finally {
       setLoading(false);
