@@ -124,7 +124,7 @@ export default function BrandCashback() {
       if (filters.isActive) params.status = filters.isActive;
       if (filters.name) params.search = filters.name;
       
-      console.log('Loading brands from:', getBaseURL());
+      console.log('Loading brands from:', import.meta.env.PROD ? (import.meta.env.VITE_API_URL || 'https://ekomobil-campaign-tool.onrender.com/api') : '/api');
       const response = await api.get('/brands', { params, timeout: 30000 });
       let filtered = Array.isArray(response.data) ? response.data : [];
       
