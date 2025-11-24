@@ -19,7 +19,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // 30 second timeout (Render.com free tier can be slow on cold start)
 });
 
 // Add request interceptor for error handling
@@ -41,4 +41,5 @@ api.interceptors.response.use(
 );
 
 export default api;
+export { getBaseURL };
 

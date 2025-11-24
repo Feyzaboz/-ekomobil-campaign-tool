@@ -119,10 +119,13 @@ export default function BrandCashback() {
   const loadBrands = useCallback(async () => {
     try {
       setError(null);
+      setLoading(true);
       const params: any = {};
       if (filters.isActive) params.status = filters.isActive;
       if (filters.name) params.search = filters.name;
-      const response = await api.get('/brands', { params });
+      
+      console.log('Loading brands from:', getBaseURL());
+      const response = await api.get('/brands', { params, timeout: 30000 });
       let filtered = Array.isArray(response.data) ? response.data : [];
       
       if (filters.category && Array.isArray(filtered)) {
@@ -144,9 +147,11 @@ export default function BrandCashback() {
       console.error('Failed to load brands', error);
       const errorMessage = error.response?.data?.error || error.message || 'Bilinmeyen hata';
       const errorDetails = error.code === 'ECONNABORTED' 
-        ? 'Backend yanıt vermiyor (timeout). Lütfen daha sonra tekrar deneyin.'
+        ? 'Backend yanıt vermiyor (timeout). Render.com free tier yavaş olabilir, lütfen birkaç saniye bekleyip tekrar deneyin.'
         : error.code === 'ERR_NETWORK'
-        ? 'Backend API\'ye bağlanılamıyor. Backend çalışıyor mu kontrol edin.'
+        ? `Backend API'ye bağlanılamıyor. URL: ${error.config?.baseURL || 'unknown'}. Backend çalışıyor mu kontrol edin.`
+        : error.response?.status === 500
+        ? 'Backend sunucu hatası. Lütfen daha sonra tekrar deneyin.'
         : `API Hatası: ${errorMessage}`;
       setError(`Markalar yüklenemedi. ${errorDetails}`);
       setBrands([]);
