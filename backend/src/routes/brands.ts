@@ -7,9 +7,21 @@ router.get('/', async (req: Request, res: Response) => {
   try {
     const { status, search } = req.query;
     let sql = `
-      SELECT b.*, c.name as category_name 
+      SELECT 
+        b.*, 
+        c.name as category_name,
+        bo.id as primary_offer_id,
+        bo.integrator_id as primary_integrator_id,
+        bo.ekomobil_rate as primary_ekomobil_rate,
+        bo.user_rate as primary_user_rate,
+        bo.is_active as primary_offer_is_active,
+        bo.is_best_offer as primary_offer_is_best,
+        i.name as primary_integrator_name,
+        i.code as primary_integrator_code
       FROM brands b 
       LEFT JOIN categories c ON b.category_id = c.id
+      LEFT JOIN brand_offers bo ON b.id = bo.brand_id AND (bo.is_best_offer = TRUE OR bo.is_active = TRUE)
+      LEFT JOIN integrators i ON bo.integrator_id = i.id
     `;
     const params: any[] = [];
     const conditions: string[] = [];
@@ -29,7 +41,46 @@ router.get('/', async (req: Request, res: Response) => {
     sql += ' ORDER BY b.name';
 
     const result = await query(sql, params);
-    res.json(result.rows);
+    
+    // Group by brand and get the best offer (is_best_offer first, then is_active)
+    const brandsMap = new Map();
+    result.rows.forEach((row: any) => {
+      const brandId = row.id;
+      if (!brandsMap.has(brandId)) {
+        brandsMap.set(brandId, {
+          id: row.id,
+          name: row.name,
+          status: row.status,
+          category_id: row.category_id,
+          category_name: row.category_name,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          primary_offer: null,
+        });
+      }
+      
+      // Prefer best offer, then active offer
+      const current = brandsMap.get(brandId);
+      if (row.primary_offer_id) {
+        if (!current.primary_offer || 
+            (row.primary_offer_is_best && !current.primary_offer.is_best_offer) ||
+            (row.primary_offer_is_active && !current.primary_offer.is_active && !row.primary_offer_is_best)) {
+          current.primary_offer = {
+            id: row.primary_offer_id,
+            integrator_id: row.primary_integrator_id,
+            integrator_name: row.primary_integrator_name,
+            integrator_code: row.primary_integrator_code,
+            ekomobil_rate: row.primary_ekomobil_rate,
+            user_rate: row.primary_user_rate,
+            is_active: row.primary_offer_is_active,
+            is_best_offer: row.primary_offer_is_best,
+          };
+        }
+      }
+    });
+    
+    const brands = Array.from(brandsMap.values());
+    res.json(brands);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch brands' });
   }

@@ -8,6 +8,16 @@ interface Brand {
   status: string;
   category_id?: number;
   category_name?: string;
+  primary_offer?: {
+    id: number;
+    integrator_id: number;
+    integrator_name?: string;
+    integrator_code?: string;
+    ekomobil_rate: number;
+    user_rate: number;
+    is_active: boolean;
+    is_best_offer: boolean;
+  } | null;
 }
 
 interface BrandOffer {
@@ -122,6 +132,14 @@ export default function BrandCashback() {
       }
       
       setBrands(Array.isArray(filtered) ? filtered : []);
+      
+      // Pre-load offers for brands that don't have primary_offer from backend
+      // This is a fallback for brands without primary offers
+      filtered.forEach((brand: Brand) => {
+        if (brand.id && (!brand.primary_offer || !brandOffers[brand.id])) {
+          loadOffers(brand.id);
+        }
+      });
     } catch (error: any) {
       console.error('Failed to load brands', error);
       const errorMessage = error.response?.data?.error || error.message || 'Bilinmeyen hata';
@@ -135,7 +153,7 @@ export default function BrandCashback() {
     } finally {
       setLoading(false);
     }
-  }, [filters.isActive, filters.name, filters.category]);
+  }, [filters.isActive, filters.name, filters.category, loadOffers]);
 
   useEffect(() => {
     loadBrands();
@@ -163,7 +181,23 @@ export default function BrandCashback() {
     return offers.find(o => o.integrator_id === integratorId) || null;
   };
 
-  const getPrimaryOffer = (brandId: number): BrandOffer | null => {
+  const getPrimaryOffer = (brandId: number, brand?: Brand): BrandOffer | null => {
+    // First try to use primary_offer from brand object (from backend)
+    if (brand?.primary_offer) {
+      return {
+        id: brand.primary_offer.id,
+        brand_id: brandId,
+        integrator_id: brand.primary_offer.integrator_id,
+        integrator_name: brand.primary_offer.integrator_name,
+        integrator_code: brand.primary_offer.integrator_code,
+        ekomobil_rate: brand.primary_offer.ekomobil_rate,
+        user_rate: brand.primary_offer.user_rate,
+        is_active: brand.primary_offer.is_active,
+        is_best_offer: brand.primary_offer.is_best_offer,
+      };
+    }
+    
+    // Fallback to loaded offers
     const offers = brandOffers[brandId] || [];
     // First try to find best offer, then first active offer, then any offer
     return offers.find(o => o.is_best_offer && o.is_active) 
@@ -347,10 +381,10 @@ export default function BrandCashback() {
     setEditingCashbackValue(0);
   };
 
-  const filteredBrands = Array.isArray(brands) ? brands.filter((brand) => {
-    const primaryOffer = getPrimaryOffer(brand.id);
-    const ekomobilRate = primaryOffer ? primaryOffer.ekomobil_rate * 100 : 0;
-    const userRate = primaryOffer ? primaryOffer.user_rate * 100 : 0;
+      const filteredBrands = Array.isArray(brands) ? brands.filter((brand) => {
+        const primaryOffer = getPrimaryOffer(brand.id, brand);
+        const ekomobilRate = primaryOffer ? primaryOffer.ekomobil_rate * 100 : 0;
+        const userRate = primaryOffer ? primaryOffer.user_rate * 100 : 0;
     
     return (
       (filters.name === '' || brand.name?.toLowerCase().includes(filters.name.toLowerCase())) &&
@@ -654,7 +688,7 @@ export default function BrandCashback() {
                 </tr>
               ) : (
                 filteredBrands.map((brand) => {
-                  const primaryOffer = getPrimaryOffer(brand.id);
+                  const primaryOffer = getPrimaryOffer(brand.id, brand);
                   const ekomobilRate = primaryOffer ? primaryOffer.ekomobil_rate * 100 : 0;
                   const userRate = primaryOffer ? primaryOffer.user_rate * 100 : 0;
                   const integratorName = primaryOffer?.integrator_name || '-';
