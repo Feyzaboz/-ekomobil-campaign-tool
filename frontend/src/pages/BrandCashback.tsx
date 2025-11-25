@@ -59,6 +59,9 @@ export default function BrandCashback() {
   const [editingIntegratorId, setEditingIntegratorId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const MAX_RETRIES = 5;
 
   const [filters, setFilters] = useState({
     name: '',
@@ -125,7 +128,7 @@ export default function BrandCashback() {
       if (filters.name) params.search = filters.name;
       
       console.log('Loading brands from:', import.meta.env.PROD ? (import.meta.env.VITE_API_URL || 'https://ekomobil-campaign-tool.onrender.com/api') : '/api');
-      const response = await api.get('/brands', { params, timeout: 30000 });
+      const response = await api.get('/brands', { params, timeout: 90000 }); // 90 second timeout for cold start
       let filtered = Array.isArray(response.data) ? response.data : [];
       
       if (filters.category && Array.isArray(filtered)) {
@@ -135,6 +138,9 @@ export default function BrandCashback() {
       }
       
       setBrands(Array.isArray(filtered) ? filtered : []);
+      setRetryCount(0); // Reset retry count on success
+      setIsRetrying(false);
+      setError(null); // Clear error on success
       
       // Pre-load offers for brands that don't have primary_offer from backend
       // This is a fallback for brands without primary offers
@@ -146,25 +152,50 @@ export default function BrandCashback() {
     } catch (error: any) {
       console.error('Failed to load brands', error);
       const errorMessage = error.response?.data?.error || error.message || 'Bilinmeyen hata';
-      const errorDetails = error.code === 'ECONNABORTED' 
-        ? 'Backend yanıt vermiyor (timeout). Render.com free tier uyku modunda olabilir, lütfen 30-60 saniye bekleyip sayfayı yenileyin.'
-        : error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED'
-        ? `Backend API'ye bağlanılamıyor. Render.com uyku modunda olabilir (ilk istek 30-60 saniye sürebilir). Lütfen bekleyip tekrar deneyin.`
-        : error.response?.status === 500
-        ? 'Backend sunucu hatası. Lütfen birkaç saniye bekleyip tekrar deneyin.'
-        : `API Hatası: ${errorMessage}`;
-      setError(`Markalar yüklenemedi. ${errorDetails} (Otomatik yeniden deneniyor...)`);
       
-      // Auto-retry after 5 seconds
-      setTimeout(() => {
-        console.log('Auto-retrying loadBrands...');
-        loadBrands();
-      }, 5000);
+      // Determine error type and message
+      let errorDetails = '';
+      let shouldRetry = false;
+      
+      if (error.code === 'ECONNABORTED') {
+        errorDetails = 'Backend yanıt vermiyor (timeout). Render.com ücretsiz katmanında backend\'in uyanması 30-90 saniye sürebilir.';
+        shouldRetry = true;
+      } else if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
+        errorDetails = 'Backend API\'ye bağlanılamıyor. Render.com uyku modunda olabilir (ilk istek 30-90 saniye sürebilir).';
+        shouldRetry = true;
+      } else if (error.response?.status >= 500) {
+        errorDetails = 'Backend sunucu hatası. Lütfen birkaç saniye bekleyip tekrar deneyin.';
+        shouldRetry = true;
+      } else {
+        errorDetails = `API Hatası: ${errorMessage}`;
+        shouldRetry = false;
+      }
+      
+      setError(`Markalar yüklenemedi. ${errorDetails}`);
       setBrands([]);
+
+      // Implement automatic retry for network/timeout/server errors
+      if (shouldRetry && retryCount < MAX_RETRIES) {
+        const nextRetryCount = retryCount + 1;
+        setRetryCount(nextRetryCount);
+        setIsRetrying(true);
+        const retryDelay = Math.min(nextRetryCount * 3000, 15000); // Exponential backoff, max 15 seconds
+        
+        console.log(`Retrying loadBrands... Attempt ${nextRetryCount}/${MAX_RETRIES} after ${retryDelay}ms`);
+        
+        setTimeout(() => {
+          loadBrands();
+        }, retryDelay);
+      } else if (retryCount >= MAX_RETRIES) {
+        setIsRetrying(false);
+        setError(`Markalar yüklenemedi. Backend API'ye ${MAX_RETRIES} kez denendi ancak ulaşılamadı. Render.com ücretsiz katmanında backend'in uyanması 30-90 saniye sürebilir. Lütfen birkaç dakika bekleyip sayfayı yenileyin.`);
+      } else {
+        setIsRetrying(false);
+      }
     } finally {
       setLoading(false);
     }
-  }, [filters.isActive, filters.name, filters.category, loadOffers]);
+  }, [filters.isActive, filters.name, filters.category, loadOffers, retryCount]);
 
   useEffect(() => {
     loadBrands();
