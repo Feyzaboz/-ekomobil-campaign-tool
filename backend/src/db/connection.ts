@@ -249,10 +249,18 @@ export const query = async (text: string, params?: any[]): Promise<any> => {
           
           if (columnsMatch && valuesMatch) {
             const columns = columnsMatch[1].split(',').map(c => c.trim());
-            const newRow: any = { id: Date.now() };
+            const newRow: any = {};
+            
+            // Auto-increment ID first
+            const existing = (db as any)[tableName];
+            newRow.id = existing.length > 0 ? Math.max(...existing.map((r: any) => r.id || 0)) + 1 : 1;
             
             columns.forEach((col, index) => {
               let value = processedParams[index];
+              if (value === null || value === undefined) {
+                newRow[col] = null;
+                return;
+              }
               if (Array.isArray(value)) {
                 value = JSON.stringify(value);
               }
@@ -262,10 +270,12 @@ export const query = async (text: string, params?: any[]): Promise<any> => {
               newRow[col] = value;
             });
 
-            // Auto-increment ID if not provided
-            if (!newRow.id || newRow.id === '?') {
-              const existing = (db as any)[tableName];
-              newRow.id = existing.length > 0 ? Math.max(...existing.map((r: any) => r.id || 0)) + 1 : 1;
+            // Set timestamps if not provided
+            if (!newRow.created_at) {
+              newRow.created_at = new Date().toISOString();
+            }
+            if (!newRow.updated_at) {
+              newRow.updated_at = new Date().toISOString();
             }
 
             (db as any)[tableName].push(newRow);
