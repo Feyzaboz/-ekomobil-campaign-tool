@@ -197,6 +197,94 @@ async function syncFromLocal() {
       }
     }
 
+    // Sync Events
+    console.log('\nFetching events from local...');
+    const eventsResponse = await axios.get(`${LOCAL_API_URL}/events`);
+    const events = Array.isArray(eventsResponse.data) ? eventsResponse.data : [];
+    console.log(`Found ${events.length} events\n`);
+
+    console.log('Syncing events to production...');
+    for (const event of events) {
+      try {
+        await axios.post(`${PRODUCTION_API_URL}/events`, {
+          name: event.name,
+          description: event.description,
+          minAppOpenCount: event.min_app_open_count || null,
+          appOpenWindowDays: event.app_open_window_days || null,
+          minRefundCount: event.min_refund_count || null,
+          refundWindowDays: event.refund_window_days || null,
+          extraFilters: event.extra_filters || null,
+        });
+        console.log(`✓ Synced event: ${event.name}`);
+      } catch (error: any) {
+        if (error.response?.status === 409 || error.response?.status === 400) {
+          // Event already exists, try to update
+          try {
+            await axios.put(`${PRODUCTION_API_URL}/events/${event.id}`, {
+              name: event.name,
+              description: event.description,
+              minAppOpenCount: event.min_app_open_count || null,
+              appOpenWindowDays: event.app_open_window_days || null,
+              minRefundCount: event.min_refund_count || null,
+              refundWindowDays: event.refund_window_days || null,
+              extraFilters: event.extra_filters || null,
+            });
+            console.log(`✓ Updated event: ${event.name}`);
+          } catch (updateError) {
+            console.error(`✗ Failed to update event ${event.name}`);
+          }
+        } else {
+          console.error(`✗ Failed to sync event ${event.name}:`, error.message);
+        }
+      }
+    }
+
+    // Sync Campaigns
+    console.log('\nFetching campaigns from local...');
+    const campaignsResponse = await axios.get(`${LOCAL_API_URL}/campaigns`);
+    const campaigns = Array.isArray(campaignsResponse.data) ? campaignsResponse.data : [];
+    console.log(`Found ${campaigns.length} campaigns\n`);
+
+    console.log('Syncing campaigns to production...');
+    for (const campaign of campaigns) {
+      try {
+        await axios.post(`${PRODUCTION_API_URL}/campaigns`, {
+          name: campaign.name,
+          description: campaign.description,
+          eventId: campaign.event_id,
+          benefitType: campaign.benefit_type,
+          benefitValue: campaign.benefit_value || null,
+          platforms: campaign.platforms || [],
+          startDate: campaign.start_date,
+          endDate: campaign.end_date,
+          status: campaign.status || 'DRAFT',
+        });
+        console.log(`✓ Synced campaign: ${campaign.name}`);
+      } catch (error: any) {
+        if (error.response?.status === 409 || error.response?.status === 400) {
+          // Campaign already exists, try to update
+          try {
+            await axios.put(`${PRODUCTION_API_URL}/campaigns/${campaign.id}`, {
+              name: campaign.name,
+              description: campaign.description,
+              eventId: campaign.event_id,
+              benefitType: campaign.benefit_type,
+              benefitValue: campaign.benefit_value || null,
+              platforms: campaign.platforms || [],
+              startDate: campaign.start_date,
+              endDate: campaign.end_date,
+              status: campaign.status || 'DRAFT',
+            });
+            console.log(`✓ Updated campaign: ${campaign.name}`);
+          } catch (updateError) {
+            console.error(`✗ Failed to update campaign ${campaign.name}`);
+          }
+        } else {
+          console.error(`✗ Failed to sync campaign ${campaign.name}:`, error.message);
+        }
+      }
+    }
+
     console.log('\n✅ Sync completed!');
   } catch (error: any) {
     console.error('❌ Sync failed:', error.message);

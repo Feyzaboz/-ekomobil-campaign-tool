@@ -6,9 +6,11 @@ dotenv.config();
 
 // Simple JSON-based storage for development
 // In production, use environment variable or default to data directory
+// IMPORTANT: On Render.com, the file system is ephemeral, so we need to use a persistent location
+// For production, we'll use the /tmp directory which persists across deploys on Render.com
 const dbPath = process.env.DATABASE_PATH || 
   (process.env.NODE_ENV === 'production' 
-    ? path.join(process.cwd(), 'data/db.json')
+    ? path.join('/tmp', 'ekomobil-db.json')  // Use /tmp for Render.com persistence
     : path.join(__dirname, '../../data/db.json'));
 
 // Ensure data directory exists
@@ -54,7 +56,17 @@ function loadDB() {
 // Save database to file
 function saveDB() {
   try {
+    // Ensure directory exists
+    const dataDir = path.dirname(dbPath);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
     fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+    // Also save a backup copy
+    if (process.env.NODE_ENV === 'production') {
+      const backupPath = path.join(path.dirname(dbPath), 'ekomobil-db-backup.json');
+      fs.writeFileSync(backupPath, JSON.stringify(db, null, 2));
+    }
   } catch (error) {
     console.error('Error saving database:', error);
   }
