@@ -147,13 +147,19 @@ export default function BrandCashback() {
       console.error('Failed to load brands', error);
       const errorMessage = error.response?.data?.error || error.message || 'Bilinmeyen hata';
       const errorDetails = error.code === 'ECONNABORTED' 
-        ? 'Backend yanıt vermiyor (timeout). Render.com free tier yavaş olabilir, lütfen birkaç saniye bekleyip tekrar deneyin.'
-        : error.code === 'ERR_NETWORK'
-        ? `Backend API'ye bağlanılamıyor. URL: ${error.config?.baseURL || 'unknown'}. Backend çalışıyor mu kontrol edin.`
+        ? 'Backend yanıt vermiyor (timeout). Render.com free tier uyku modunda olabilir, lütfen 30-60 saniye bekleyip sayfayı yenileyin.'
+        : error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED'
+        ? `Backend API'ye bağlanılamıyor. Render.com uyku modunda olabilir (ilk istek 30-60 saniye sürebilir). Lütfen bekleyip tekrar deneyin.`
         : error.response?.status === 500
-        ? 'Backend sunucu hatası. Lütfen daha sonra tekrar deneyin.'
+        ? 'Backend sunucu hatası. Lütfen birkaç saniye bekleyip tekrar deneyin.'
         : `API Hatası: ${errorMessage}`;
-      setError(`Markalar yüklenemedi. ${errorDetails}`);
+      setError(`Markalar yüklenemedi. ${errorDetails} (Otomatik yeniden deneniyor...)`);
+      
+      // Auto-retry after 5 seconds
+      setTimeout(() => {
+        console.log('Auto-retrying loadBrands...');
+        loadBrands();
+      }, 5000);
       setBrands([]);
     } finally {
       setLoading(false);
