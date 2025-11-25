@@ -74,8 +74,16 @@ async function runMigrations() {
         }
       }
     } else {
-      // Database has data, update seed file for future deploys
-      await saveSeedFile();
+      // Database has data, update seed file periodically (every hour) for future deploys
+      // This ensures the seed file stays up-to-date with production data
+      const lastSeedUpdate = process.env.LAST_SEED_UPDATE ? parseInt(process.env.LAST_SEED_UPDATE) : 0;
+      const now = Date.now();
+      const oneHour = 60 * 60 * 1000;
+      
+      if (now - lastSeedUpdate > oneHour) {
+        await saveSeedFile();
+        process.env.LAST_SEED_UPDATE = now.toString();
+      }
     }
   } catch (error) {
     console.error('Migration error:', error);
