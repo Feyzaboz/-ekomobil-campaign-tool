@@ -183,9 +183,7 @@ export default function BrandCashback() {
     }
   }, [brands.length, loadOffers]);
 
-  useEffect(() => {
-    loadBrands();
-  }, [loadBrands]);
+  // Remove duplicate useEffect - loadBrands is already called in the first useEffect
 
   const getBrandOffer = (brandId: number, integratorId: number): BrandOffer | null => {
     const offers = brandOffers[brandId] || [];
