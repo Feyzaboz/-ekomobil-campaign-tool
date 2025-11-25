@@ -57,16 +57,31 @@ function loadDB() {
     }
   }
   
-  // If database doesn't exist, try to restore from seed file (for production deploys)
-  if (process.env.NODE_ENV === 'production' && fs.existsSync(seedDbPath)) {
-    try {
-      console.log('Database not found, restoring from seed file...');
-      const seedData = fs.readFileSync(seedDbPath, 'utf-8');
-      db = JSON.parse(seedData);
-      saveDB(); // Save to production path
-      console.log('Database restored from seed file');
-    } catch (error) {
-      console.error('Error restoring from seed file:', error);
+  // If database doesn't exist or is empty, try to restore from seed file (for production deploys)
+  if (process.env.NODE_ENV === 'production') {
+    const seedDbPath = path.join(__dirname, '../../data/db-seed.json');
+    if (fs.existsSync(seedDbPath)) {
+      try {
+        console.log('Database empty or not found, restoring from seed file...');
+        const seedData = fs.readFileSync(seedDbPath, 'utf-8');
+        const seedDb = JSON.parse(seedData);
+        
+        // Only restore if current database is empty
+        if (db.brands.length === 0 && db.categories.length === 0) {
+          db.integrators = seedDb.integrators || [];
+          db.categories = seedDb.categories || [];
+          db.brands = seedDb.brands || [];
+          db.brand_offers = seedDb.brand_offers || [];
+          db.category_offers = seedDb.category_offers || [];
+          db.event_definitions = seedDb.event_definitions || [];
+          db.campaigns = seedDb.campaigns || [];
+          db.announcements = seedDb.announcements || [];
+          saveDB(); // Save to production path
+          console.log(`Database restored from seed file: ${db.brands.length} brands, ${db.categories.length} categories`);
+        }
+      } catch (error) {
+        console.error('Error restoring from seed file:', error);
+      }
     }
   }
 }
