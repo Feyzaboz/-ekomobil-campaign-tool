@@ -20,12 +20,30 @@ async function runMigrations() {
     saveDB();
     console.log('Database initialized successfully');
 
-    // If database is empty, restore from seed file (for production deploys)
-    if (db.brands.length === 0 && db.categories.length === 0) {
-      const seedDbPath = path.join(__dirname, '../../data/db-seed.json');
-      if (fs.existsSync(seedDbPath)) {
+    // If database is empty or has only seed data (4 brands), restore from seed file (for production deploys)
+    const hasOnlySeedData = db.brands.length <= 4 && db.categories.length <= 3;
+    
+    if (db.brands.length === 0 && db.categories.length === 0 || hasOnlySeedData) {
+      // Try multiple possible paths for seed file
+      const possiblePaths = [
+        path.join(__dirname, '../../data/db-seed.json'), // Development
+        path.join(process.cwd(), 'data/db-seed.json'), // Production (from backend/)
+        path.join(process.cwd(), 'backend/data/db-seed.json'), // Production (from root)
+        path.join(process.cwd(), 'src/../data/db-seed.json'), // Production (from dist/)
+      ];
+      
+      let seedDbPath: string | null = null;
+      for (const possiblePath of possiblePaths) {
+        if (fs.existsSync(possiblePath)) {
+          seedDbPath = possiblePath;
+          console.log('Found seed file at:', seedDbPath);
+          break;
+        }
+      }
+      
+      if (seedDbPath) {
         try {
-          console.log('Database is empty, restoring from seed file...');
+          console.log('Database is empty or has only seed data, restoring from seed file...');
           const seedData = fs.readFileSync(seedDbPath, 'utf-8');
           const seedDb = JSON.parse(seedData);
           
@@ -40,15 +58,20 @@ async function runMigrations() {
           db.announcements = seedDb.announcements || [];
           
           saveDB();
-          console.log(`Restored from seed: ${db.brands.length} brands, ${db.categories.length} categories, ${db.event_definitions.length} events, ${db.campaigns.length} campaigns`);
+          console.log(`✅ Restored from seed: ${db.brands.length} brands, ${db.categories.length} categories, ${db.event_definitions.length} events, ${db.campaigns.length} campaigns`);
         } catch (error) {
           console.error('Error restoring from seed file:', error);
-          // Fallback to basic seed
-          await seedData();
+          // Fallback to basic seed only if completely empty
+          if (db.brands.length === 0) {
+            await seedData();
+          }
         }
       } else {
-        // No seed file, use basic seed
-        await seedData();
+        console.log('Seed file not found, using basic seed data');
+        // No seed file, use basic seed only if completely empty
+        if (db.brands.length === 0) {
+          await seedData();
+        }
       }
     } else {
       // Database has data, update seed file for future deploys
