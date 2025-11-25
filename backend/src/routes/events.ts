@@ -26,11 +26,11 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, description, minAppOpenCount, appOpenWindowDays, minRefundCount, refundWindowDays, extraFilters } = req.body;
+    const { name, description, minAppOpenCount, appOpenWindowDays, minRefundCount, refundWindowDays, estimatedPersonCount, extraFilters } = req.body;
     const result = await query(
-      `INSERT INTO event_definitions (name, description, min_app_open_count, app_open_window_days, min_refund_count, refund_window_days, extra_filters)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [name, description, minAppOpenCount || null, appOpenWindowDays || null, minRefundCount || null, refundWindowDays || null, extraFilters ? JSON.stringify(extraFilters) : null]
+      `INSERT INTO event_definitions (name, description, min_app_open_count, app_open_window_days, min_refund_count, refund_window_days, estimated_person_count, extra_filters)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [name, description, minAppOpenCount || null, appOpenWindowDays || null, minRefundCount || null, refundWindowDays || null, estimatedPersonCount || null, extraFilters ? JSON.stringify(extraFilters) : null]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -40,13 +40,13 @@ router.post('/', async (req: Request, res: Response) => {
 
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const { name, description, minAppOpenCount, appOpenWindowDays, minRefundCount, refundWindowDays, extraFilters } = req.body;
+    const { name, description, minAppOpenCount, appOpenWindowDays, minRefundCount, refundWindowDays, estimatedPersonCount, extraFilters } = req.body;
     const result = await query(
       `UPDATE event_definitions 
        SET name = $1, description = $2, min_app_open_count = $3, app_open_window_days = $4, 
-           min_refund_count = $5, refund_window_days = $6, extra_filters = $7, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $8 RETURNING *`,
-      [name, description, minAppOpenCount || null, appOpenWindowDays || null, minRefundCount || null, refundWindowDays || null, extraFilters ? JSON.stringify(extraFilters) : null, req.params.id]
+           min_refund_count = $5, refund_window_days = $6, estimated_person_count = $7, extra_filters = $8, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $9 RETURNING *`,
+      [name, description, minAppOpenCount || null, appOpenWindowDays || null, minRefundCount || null, refundWindowDays || null, estimatedPersonCount || null, extraFilters ? JSON.stringify(extraFilters) : null, req.params.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Event definition not found' });

@@ -11,6 +11,7 @@ interface EventDefinition {
   app_open_window_days?: number;
   min_refund_count?: number;
   refund_window_days?: number;
+  estimated_person_count?: number; // Tahmini kişi sayısı
 }
 
 interface Campaign {
@@ -20,7 +21,8 @@ interface Campaign {
   event_id: number;
   event_name: string;
   benefit_type: string;
-  benefit_value?: number;
+  max_usage_count?: number; // Kaç iade/alışveriş için geçerli (benefit_value yerine)
+  estimated_person_count?: number; // Tahmini kişi sayısı
   platforms: string[];
   start_date: string;
   end_date: string;
@@ -43,6 +45,7 @@ export default function Campaigns() {
     appOpenWindowDays: '',
     minRefundCount: '',
     refundWindowDays: '',
+    estimatedPersonCount: '', // Tahmini kişi sayısı
   });
 
   const [campaignForm, setCampaignForm] = useState({
@@ -50,7 +53,8 @@ export default function Campaigns() {
     description: '',
     eventId: '',
     benefitType: 'DOUBLE_REFUND_VALUE',
-    benefitValue: '',
+    maxUsageCount: '', // Kaç iade/alışveriş için geçerli (benefitValue yerine)
+    estimatedPersonCount: '', // Tahmini kişi sayısı
     platforms: ['ANDROID'],
     startDate: '',
     endDate: '',
@@ -92,6 +96,7 @@ export default function Campaigns() {
         appOpenWindowDays: eventForm.appOpenWindowDays ? parseInt(eventForm.appOpenWindowDays) : null,
         minRefundCount: eventForm.minRefundCount ? parseInt(eventForm.minRefundCount) : null,
         refundWindowDays: eventForm.refundWindowDays ? parseInt(eventForm.refundWindowDays) : null,
+        estimatedPersonCount: eventForm.estimatedPersonCount ? parseInt(eventForm.estimatedPersonCount) : null,
       };
 
       if (editingEvent) {
@@ -113,7 +118,8 @@ export default function Campaigns() {
     try {
       const data = {
         ...campaignForm,
-        benefitValue: campaignForm.benefitValue ? parseFloat(campaignForm.benefitValue) : null,
+        maxUsageCount: campaignForm.maxUsageCount ? parseInt(campaignForm.maxUsageCount) : null,
+        estimatedPersonCount: campaignForm.estimatedPersonCount ? parseInt(campaignForm.estimatedPersonCount) : null,
         eventId: parseInt(campaignForm.eventId),
       };
 
@@ -129,7 +135,8 @@ export default function Campaigns() {
         description: '',
         eventId: '',
         benefitType: 'DOUBLE_REFUND_VALUE',
-        benefitValue: '',
+        maxUsageCount: '',
+        estimatedPersonCount: '',
         platforms: ['ANDROID'],
         startDate: '',
         endDate: '',
@@ -229,7 +236,7 @@ export default function Campaigns() {
             <button
               onClick={() => {
                 setEditingEvent(null);
-                setEventForm({ name: '', description: '', minAppOpenCount: '', appOpenWindowDays: '', minRefundCount: '', refundWindowDays: '' });
+                setEventForm({ name: '', description: '', minAppOpenCount: '', appOpenWindowDays: '', minRefundCount: '', refundWindowDays: '', estimatedPersonCount: '' });
                 setShowEventForm(true);
               }}
               className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark flex items-center"
@@ -299,6 +306,16 @@ export default function Campaigns() {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tahmini Kişi Sayısı</label>
+                    <input
+                      type="number"
+                      value={eventForm.estimatedPersonCount}
+                      onChange={(e) => setEventForm({ ...eventForm, estimatedPersonCount: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Örn: 1000"
+                    />
+                  </div>
                 </div>
                 <div className="flex space-x-4">
                   <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark">
@@ -346,6 +363,7 @@ export default function Campaigns() {
                             appOpenWindowDays: event.app_open_window_days?.toString() || '',
                             minRefundCount: event.min_refund_count?.toString() || '',
                             refundWindowDays: event.refund_window_days?.toString() || '',
+                            estimatedPersonCount: event.estimated_person_count?.toString() || '',
                           });
                           setShowEventForm(true);
                         }}
@@ -377,7 +395,8 @@ export default function Campaigns() {
                   description: '',
                   eventId: '',
                   benefitType: 'DOUBLE_REFUND_VALUE',
-                  benefitValue: '',
+                  maxUsageCount: '',
+                  estimatedPersonCount: '',
                   platforms: ['ANDROID'],
                   startDate: '',
                   endDate: '',
@@ -447,14 +466,30 @@ export default function Campaigns() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fayda Değeri</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Kaç İade/Alışveriş İçin Geçerli
+                    </label>
                     <input
                       type="number"
-                      step="0.1"
-                      value={campaignForm.benefitValue}
-                      onChange={(e) => setCampaignForm({ ...campaignForm, benefitValue: e.target.value })}
+                      min="1"
+                      value={campaignForm.maxUsageCount}
+                      onChange={(e) => setCampaignForm({ ...campaignForm, maxUsageCount: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                      placeholder="Örn: 2.0"
+                      placeholder="Örn: 5 (5 iade/alışveriş için geçerli)"
+                    />
+                    <small className="text-gray-500 text-xs mt-1 block">
+                      Bu kampanyadan kazandığı 2 kat cashback veya 2 kat iade değerini kaç iade/alışveriş için kullanabileceğini belirtir
+                    </small>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tahmini Kişi Sayısı</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={campaignForm.estimatedPersonCount}
+                      onChange={(e) => setCampaignForm({ ...campaignForm, estimatedPersonCount: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      placeholder="Örn: 1000"
                     />
                   </div>
                   <div>
@@ -589,7 +624,8 @@ export default function Campaigns() {
                             description: campaign.description || '',
                             eventId: campaign.event_id.toString(),
                             benefitType: campaign.benefit_type,
-                            benefitValue: campaign.benefit_value?.toString() || '',
+                            maxUsageCount: campaign.max_usage_count?.toString() || '',
+                            estimatedPersonCount: campaign.estimated_person_count?.toString() || '',
                             platforms: campaign.platforms,
                             startDate: new Date(campaign.start_date).toISOString().slice(0, 16),
                             endDate: new Date(campaign.end_date).toISOString().slice(0, 16),

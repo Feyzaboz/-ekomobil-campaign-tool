@@ -37,7 +37,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, description, eventId, benefitType, benefitValue, platforms, startDate, endDate, status } = req.body;
+    const { name, description, eventId, benefitType, maxUsageCount, estimatedPersonCount, platforms, startDate, endDate, status } = req.body;
     
     // Validate dates
     if (new Date(endDate) <= new Date(startDate)) {
@@ -45,9 +45,9 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     const result = await query(
-      `INSERT INTO campaigns (name, description, event_id, benefit_type, benefit_value, platforms, start_date, end_date, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [name, description, eventId, benefitType, benefitValue || null, platforms, startDate, endDate, status || 'DRAFT']
+      `INSERT INTO campaigns (name, description, event_id, benefit_type, max_usage_count, estimated_person_count, platforms, start_date, end_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      [name, description, eventId, benefitType, maxUsageCount || null, estimatedPersonCount || null, platforms, startDate, endDate, status || 'DRAFT']
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -57,7 +57,7 @@ router.post('/', async (req: Request, res: Response) => {
 
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const { name, description, eventId, benefitType, benefitValue, platforms, startDate, endDate, status } = req.body;
+    const { name, description, eventId, benefitType, maxUsageCount, estimatedPersonCount, platforms, startDate, endDate, status } = req.body;
     
     // Validate dates
     if (endDate && startDate && new Date(endDate) <= new Date(startDate)) {
@@ -66,10 +66,10 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     const result = await query(
       `UPDATE campaigns 
-       SET name = $1, description = $2, event_id = $3, benefit_type = $4, benefit_value = $5, 
-           platforms = $6, start_date = $7, end_date = $8, status = $9, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $10 RETURNING *`,
-      [name, description, eventId, benefitType, benefitValue || null, platforms, startDate, endDate, status, req.params.id]
+       SET name = $1, description = $2, event_id = $3, benefit_type = $4, max_usage_count = $5, estimated_person_count = $6,
+           platforms = $7, start_date = $8, end_date = $9, status = $10, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $11 RETURNING *`,
+      [name, description, eventId, benefitType, maxUsageCount || null, estimatedPersonCount || null, platforms, startDate, endDate, status, req.params.id]
     );
     
     if (result.rows.length === 0) {
@@ -90,14 +90,15 @@ router.post('/:id/duplicate', async (req: Request, res: Response) => {
 
     const campaign = original.rows[0];
     const result = await query(
-      `INSERT INTO campaigns (name, description, event_id, benefit_type, benefit_value, platforms, start_date, end_date, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      `INSERT INTO campaigns (name, description, event_id, benefit_type, max_usage_count, estimated_person_count, platforms, start_date, end_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
       [
         `${campaign.name} (Kopya)`,
         campaign.description,
         campaign.event_id,
         campaign.benefit_type,
-        campaign.benefit_value,
+        campaign.max_usage_count || null,
+        campaign.estimated_person_count || null,
         campaign.platforms,
         campaign.start_date,
         campaign.end_date,

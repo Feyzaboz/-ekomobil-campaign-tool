@@ -96,6 +96,7 @@ export interface EventDefinition {
   appOpenWindowDays?: number;
   minRefundCount?: number;
   refundWindowDays?: number;
+  estimatedPersonCount?: number; // Tahmini kişi sayısı
   extraFilters?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
@@ -107,7 +108,8 @@ export interface Campaign {
   description: string;
   eventId: number;
   benefitType: BenefitType;
-  benefitValue?: number;
+  maxUsageCount?: number; // Kaç iade/alışveriş için geçerli (benefitValue yerine)
+  estimatedPersonCount?: number; // Tahmini kişi sayısı
   platforms: Platform[];
   startDate: Date;
   endDate: Date;
