@@ -439,7 +439,7 @@ export default function BrandCashback() {
     );
   }) : [];
 
-  if (loading) {
+  if (loading && !isRetrying) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -452,17 +452,37 @@ export default function BrandCashback() {
 
   if (error) {
     return (
-      <div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Uyarı</h3>
-          <p className="text-yellow-700">{error}</p>
-          <p className="text-sm text-yellow-600 mt-2">
-            Backend API çalışmıyor olabilir. Lütfen backend'in çalıştığından emin olun.
-          </p>
-        </div>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Harca Kazan Markalar</h2>
-        </div>
+      <div className="text-center text-red-600 p-6 bg-red-50 rounded-lg max-w-2xl mx-auto mt-8">
+        <p className="font-semibold text-lg mb-3">⚠️ Hata:</p>
+        <p className="mb-4">{error}</p>
+        {isRetrying && retryCount > 0 && retryCount < MAX_RETRIES && (
+          <div className="mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-2"></div>
+            <p className="text-sm text-gray-700">Otomatik yeniden deneniyor ({retryCount}/{MAX_RETRIES})...</p>
+            <p className="text-xs text-gray-500 mt-1">Render.com ücretsiz katmanında backend'in uyanması 30-90 saniye sürebilir.</p>
+          </div>
+        )}
+        {!isRetrying && (
+          <div className="space-y-2">
+            <button
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                setRetryCount(0);
+                setIsRetrying(false);
+                loadBrands();
+                loadCategories();
+                loadIntegrators();
+              }}
+              className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+            >
+              🔄 Tekrar Dene
+            </button>
+            <p className="text-xs text-gray-500 mt-2">
+              Backend uyku modunda olabilir. İlk istek 30-90 saniye sürebilir.
+            </p>
+          </div>
+        )}
       </div>
     );
   }
