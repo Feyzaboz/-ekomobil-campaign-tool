@@ -1,4 +1,6 @@
-import { db, saveDB, query } from './connection';
+import { db, saveDB, query, getDb } from './connection';
+import fs from 'fs';
+import path from 'path';
 
 async function runMigrations() {
   try {
@@ -18,11 +20,57 @@ async function runMigrations() {
     saveDB();
     console.log('Database initialized successfully');
 
-    // Seed data
-    await seedData();
+    // If database is empty, restore from seed file (for production deploys)
+    if (db.brands.length === 0 && db.categories.length === 0) {
+      const seedDbPath = path.join(__dirname, '../../data/db-seed.json');
+      if (fs.existsSync(seedDbPath)) {
+        try {
+          console.log('Database is empty, restoring from seed file...');
+          const seedData = fs.readFileSync(seedDbPath, 'utf-8');
+          const seedDb = JSON.parse(seedData);
+          
+          // Restore all data from seed
+          db.integrators = seedDb.integrators || [];
+          db.categories = seedDb.categories || [];
+          db.brands = seedDb.brands || [];
+          db.brand_offers = seedDb.brand_offers || [];
+          db.category_offers = seedDb.category_offers || [];
+          db.event_definitions = seedDb.event_definitions || [];
+          db.campaigns = seedDb.campaigns || [];
+          db.announcements = seedDb.announcements || [];
+          
+          saveDB();
+          console.log(`Restored from seed: ${db.brands.length} brands, ${db.categories.length} categories, ${db.event_definitions.length} events, ${db.campaigns.length} campaigns`);
+        } catch (error) {
+          console.error('Error restoring from seed file:', error);
+          // Fallback to basic seed
+          await seedData();
+        }
+      } else {
+        // No seed file, use basic seed
+        await seedData();
+      }
+    } else {
+      // Database has data, update seed file for future deploys
+      await saveSeedFile();
+    }
   } catch (error) {
     console.error('Migration error:', error);
     process.exit(1);
+  }
+}
+
+async function saveSeedFile() {
+  try {
+    const seedDbPath = path.join(__dirname, '../../data/db-seed.json');
+    const dataDir = path.dirname(seedDbPath);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    fs.writeFileSync(seedDbPath, JSON.stringify(getDb(), null, 2));
+    console.log('Seed file saved for future deploys');
+  } catch (error) {
+    console.error('Error saving seed file:', error);
   }
 }
 

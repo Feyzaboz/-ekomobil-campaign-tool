@@ -6,12 +6,15 @@ dotenv.config();
 
 // Simple JSON-based storage for development
 // In production, use environment variable or default to data directory
-// IMPORTANT: On Render.com, the file system is ephemeral, so we need to use a persistent location
-// For production, we'll use the /tmp directory which persists across deploys on Render.com
+// IMPORTANT: On Render.com, the file system is ephemeral, so we need to restore from seed file
+// For production, we'll use the /tmp directory and restore from seed file on startup
 const dbPath = process.env.DATABASE_PATH || 
   (process.env.NODE_ENV === 'production' 
     ? path.join('/tmp', 'ekomobil-db.json')  // Use /tmp for Render.com persistence
     : path.join(__dirname, '../../data/db.json'));
+
+// Seed database file path (committed to Git for persistence)
+const seedDbPath = path.join(__dirname, '../../data/db-seed.json');
 
 // Ensure data directory exists
 const dataDir = path.dirname(dbPath);
@@ -47,8 +50,23 @@ function loadDB() {
     try {
       const data = fs.readFileSync(dbPath, 'utf-8');
       db = JSON.parse(data);
+      console.log('Database loaded from:', dbPath);
+      return;
     } catch (error) {
       console.error('Error loading database:', error);
+    }
+  }
+  
+  // If database doesn't exist, try to restore from seed file (for production deploys)
+  if (process.env.NODE_ENV === 'production' && fs.existsSync(seedDbPath)) {
+    try {
+      console.log('Database not found, restoring from seed file...');
+      const seedData = fs.readFileSync(seedDbPath, 'utf-8');
+      db = JSON.parse(seedData);
+      saveDB(); // Save to production path
+      console.log('Database restored from seed file');
+    } catch (error) {
+      console.error('Error restoring from seed file:', error);
     }
   }
 }
@@ -374,3 +392,4 @@ export const query = async (text: string, params?: any[]): Promise<any> => {
 };
 
 export { db, saveDB, loadDB };
+export const getDb = () => db;
